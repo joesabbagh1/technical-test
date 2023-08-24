@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from "react";
-
-import api from "../services/api";
+import React from "react";
 
 // eslint-disable-next-line react/display-name
 export default ({ value, projects, onChange, ...props }) => {
