@@ -20,7 +20,6 @@ const NewList = () => {
     getProjects();
   }, []);
 
-  console.log(users);
   async function getProjects() {
     const res = await api.get("/project");
     setProjects(res.data);

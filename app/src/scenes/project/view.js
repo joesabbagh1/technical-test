@@ -60,7 +60,6 @@ export default function ProjectView() {
 }
 
 const ProjectDetails = ({ project }) => {
-  console.log(project);
   return (
     <div>
       {project ? (
