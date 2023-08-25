@@ -101,6 +101,7 @@ const ProjectDetails = ({ project }) => {
     </div>
   );
 };
+
 const Budget = ({ project }) => {
   const [activities, setActivities] = useState([10, 29, 18, 12]);
 
