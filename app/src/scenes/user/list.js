@@ -119,7 +119,6 @@ const Create = () => {
                   toast.success("Created!");
                   setOpen(false);
                   history.push(`/user/${res.data._id}`);
-                  console.log(values, 5);
                 } catch (e) {
                   console.log(e);
                   toast.error("Some Error!", e.code);
