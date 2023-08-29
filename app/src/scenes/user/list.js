@@ -156,7 +156,7 @@ const Create = () => {
                           </label>
                           <Field
                             className="peer signInInputs "
-                            validate={(v) => (validator.isEmpty(v) && "This field is Required") || (validator.isEmail(v) && "Enter a valid Email please.")}
+                            validate={(v) => (validator.isEmpty(v) && "This field is Required") || (!validator.isEmail(v) && "Enter a valid Email please.")}
                             name="email"
                             type="text"
                             id="email"
