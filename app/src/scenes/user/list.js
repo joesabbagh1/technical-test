@@ -1,10 +1,11 @@
-import { Formik } from "formik";
+import { Field, Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useHistory } from "react-router-dom";
 import Loader from "../../components/loader";
 import LoadingButton from "../../components/loadingButton";
 import api from "../../services/api";
+import validator from "validator";
 
 const NewList = () => {
   const [users, setUsers] = useState(null);
@@ -105,12 +106,14 @@ const Create = () => {
               e.stopPropagation();
             }}>
             <Formik
-              initialValues={{}}
+              initialValues={{ username: "", email: "", password: "" }}
               onSubmit={async (values, { setSubmitting }) => {
                 try {
                   values.status = "active";
                   values.availability = "not available";
                   values.role = "ADMIN";
+                  values.name = values.username;
+                  delete values[username];
                   const res = await api.post("/user", values);
                   if (!res.ok) throw res;
                   toast.success("Created!");
@@ -122,24 +125,72 @@ const Create = () => {
                 }
                 setSubmitting(false);
               }}>
-              {({ values, handleChange, handleSubmit, isSubmitting }) => (
+              {({ values, handleChange, handleSubmit, isSubmitting, errors }) => (
                 <React.Fragment>
                   <div>
                     <div className="flex justify-between flex-wrap">
                       <div className="w-full md:w-[48%] mt-2">
-                        <div className="text-[14px] text-[#212325] font-medium	">Name</div>
-                        <input className="projectsInput text-[14px] font-normal text-[#212325] rounded-[10px]" name="username" value={values.username} onChange={handleChange} />
+                        {/* Username */}
+                        <div className="flex flex-col">
+                          <label className="peer-focus:text-[#116eee]" htmlFor="username">
+                            Username
+                          </label>
+                          <Field
+                            className="peer signInInputs "
+                            validate={(v) => validator.isEmpty(v) && "This field is Required"}
+                            name="username"
+                            type="text"
+                            id="username"
+                            value={values.username}
+                            onChange={handleChange}
+                          />
+                        </div>
+                        {/* Error */}
+                        <p className="text-[12px] text-[#FD3131]">{errors.username}</p>
                       </div>
                       <div className="w-full md:w-[48%] mt-2">
-                        <div className="text-[14px] text-[#212325] font-medium	">Email</div>
-                        <input className="projectsInput text-[14px] font-normal text-[#212325] rounded-[10px]" name="email" value={values.email} onChange={handleChange} />
+                        {/* Email */}
+                        <div className="flex flex-col">
+                          <label className="peer-focus:text-[#116eee]" htmlFor="email">
+                            Email
+                          </label>
+                          <Field
+                            className="peer signInInputs "
+                            validate={(v) => (validator.isEmpty(v) && "This field is Required") || (!validator.isEmail(v) && "Enter a valid Email please.")}
+                            name="email"
+                            type="text"
+                            id="email"
+                            value={values.email}
+                            onChange={handleChange}
+                          />
+                        </div>
+                        {/* Error */}
+                        <p className="text-[12px] text-[#FD3131]">{errors.email}</p>
                       </div>
                     </div>
                     <div className="flex justify-between flex-wrap mt-3">
                       {/* Password */}
                       <div className="w-full md:w-[48%] mt-2">
-                        <div className="text-[14px] text-[#212325] font-medium	">Password</div>
-                        <input className="projectsInput text-[14px] font-normal text-[#212325] rounded-[10px]" name="password" value={values.password} onChange={handleChange} />
+                        <div className="flex flex-col">
+                          <label className="peer-focus:text-[#116eee]" htmlFor="password">
+                            Password
+                          </label>
+                          <Field
+                            className="peer signInInputs"
+                            validate={(v) =>
+                              (validator.isEmpty(v) && "This field is Required") ||
+                              (v.length < 6 && "Password must be at least 6 characters.") ||
+                              (v.length > 100 && "Password must be less than 100 characters.")
+                            }
+                            name="password"
+                            type="password"
+                            id="password"
+                            value={values.password}
+                            onChange={handleChange}
+                          />
+                          {/* Error */}
+                          <p className="text-[12px] text-[#FD3131]">{errors.password}</p>
+                        </div>
                       </div>
                     </div>
                   </div>

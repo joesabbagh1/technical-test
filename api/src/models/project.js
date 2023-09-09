@@ -22,6 +22,7 @@ const Schema = new mongoose.Schema({
   created_at: { type: Date, default: Date.now },
   last_updated_at: { type: Date, default: Date.now },
   status: { type: String },
+  pinned: { type: Boolean, default: false },
 });
 
 const OBJ = mongoose.model(MODELNAME, Schema);

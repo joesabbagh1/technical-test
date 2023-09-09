@@ -56,8 +56,14 @@ router.post("/", passport.authenticate("user", { session: false }), async (req, 
 
 router.get("/", passport.authenticate("user", { session: false }), async (req, res) => {
   try {
-    const users = await UserObject.find({ ...req.query, organisation: req.user.organisation }).sort("-last_login_at");
-    return res.status(200).send({ ok: true, data: users });
+    const users = await UserObject.find({ ...req.query, organisation: req.user.organisation })
+      .sort("-last_login_at")
+      .lean();
+    const safeDataUsers = users.map((user) => {
+      const { email, password, address, ...safeUser } = user;
+      return safeUser;
+    });
+    return res.status(200).send({ ok: true, data: safeDataUsers });
   } catch (error) {
     console.log(error);
     res.status(500).send({ ok: false, code: SERVER_ERROR, error });

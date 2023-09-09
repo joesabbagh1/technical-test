@@ -2,22 +2,75 @@ import { Formik } from "formik";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useHistory } from "react-router-dom";
-
 import Loader from "../../components/loader";
 import LoadingButton from "../../components/loadingButton";
 import ProgressBar from "../../components/ProgressBar";
-
 import api from "../../services/api";
+import { MoreIcon, Pinned } from "../../assets/Icons";
+
+const Project = ({ project, handlePinToggle }) => {
+  const [open, setOpen] = useState(false);
+  const history = useHistory();
+
+  return (
+    <div className="relative">
+      <div
+        onClick={() => history.push(`/project/${project._id}`)}
+        className="flex justify-between z-10 flex-wrap p-3 border border-[#FFFFFF] bg-[#F9FBFD] rounded-[16px] mt-3 cursor-pointer">
+        <div className="flex w-full md:w-[25%] border-r border-[#E5EAEF]">
+          <div className="flex flex-wrap gap-4 items-center">
+            {project.logo && <img className="w-[85px] h-[85px] rounded-[8px] object-contain	" src={project.logo} alt="ProjectImage.png" />}
+            <div className="flex flex-col flex-wrap flex-1">
+              <div className="text-[18px] text-[#212325] font-semibold flex flex-wrap gap-2">
+                <span>{project.name}</span>
+                {project.pinned && (
+                  <div className="rotate-45">
+                    <Pinned />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="w-full md:w-[50%] border-r border-[#E5EAEF] pl-[10px]">
+          <span className="text-[14px] font-medium text-[#212325]">{project.description ? project.description : ""}</span>
+        </div>
+        <div className="w-full md:w-[25%]  px-[10px]">
+          <span className="text-[16px] font-medium text-[#212325]">Budget consumed {project.paymentCycle === "MONTHLY" && "this month"}:</span>
+          <Budget project={project} />
+        </div>
+      </div>
+      <div className="absolute right-2 top-2 z-50">
+        <button className="p-1 text-white scale-75 rounded-xl bg-[#64B5F5] text-wprojecte" onClick={() => setOpen(!open)}>
+          <MoreIcon />
+        </button>
+        {open && (
+          <div
+            className="absolute cursor-pointer top-9 px-2 py-1 bg-[#64B5F5] text-white rounded-xl right-1/2 translate-x-1/2 flex justify-center shadow-sm z-50 hover:bg-opacity-75"
+            onClick={() => {
+              handlePinToggle(project);
+              setOpen(false);
+            }}>
+            {project.pinned ? <span>Unpin</span> : <span>Pin</span>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const ProjectList = () => {
   const [projects, setProjects] = useState(null);
   const [activeProjects, setActiveProjects] = useState(null);
 
-  const history = useHistory();
-
   useEffect(() => {
     (async () => {
       const { data: u } = await api.get("/project");
-      setProjects(u);
+
+      //sorting the projects based on pinned
+      const sortedProjects = u.sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
+      setProjects(sortedProjects);
     })();
   }, []);
 
@@ -33,33 +86,57 @@ const ProjectList = () => {
     setActiveProjects(p);
   };
 
+  /**
+   * The `handlePinToggle` function toggles the 'pinned' property of a project, reorders the projects
+   * array based on the pinned status, updates the projects state, and makes an API call to update the
+   * pinned status of the project.
+   * @param project - The `project` parameter is an object that represents a project. It likely has
+   * properties such as `_id` (project ID), `name` (project name), and `pinned` (a boolean indicating
+   * whether the project is pinned or not).
+   */
+  const handlePinToggle = async (project) => {
+    // Toggle the 'pinned' property of the project
+    project.pinned = !project.pinned;
+    // Create a copy of projects array and find the index of the toggled project
+    const projectsCopy = [...projects];
+    const projectIndex = projectsCopy.findIndex((p) => p._id === project._id);
+
+    console.log(projectIndex);
+    // Remove the project from the array
+    projectsCopy.splice(projectIndex, 1);
+
+    // Reorder the projects array based on the pinned status
+    if (project.pinned) {
+      // If pinned, add it to the beginning
+      projectsCopy.unshift(project);
+    } else {
+      // If unpinned, find its original position and insert it back
+      const unpinnedProjects = projectsCopy.filter((p) => !p.pinned);
+      const originalIndex = unpinnedProjects.findIndex((p) => p._id === project._id);
+      projectsCopy.splice(originalIndex, 0, project);
+    }
+
+    projectsCopy.sort((a, b) => {
+      if (a.pinned && !b.pinned) {
+        return -1; // 'a' is pinned, move it up
+      } else if (!a.pinned && b.pinned) {
+        return 1; // 'b' is pinned, move it up
+      } else {
+        // Alphabetical sorting
+        return a.name.localeCompare(b.name);
+      }
+    });
+
+    setProjects(projectsCopy);
+    await api.put(`/project/${project._id}`, { pinned: project.pinned });
+  };
+
   return (
     <div className="w-full p-2 md:!px-8">
       <Create onChangeSearch={handleSearch} />
       <div className="py-3">
         {activeProjects.map((hit) => {
-          return (
-            <div
-              key={hit._id}
-              onClick={() => history.push(`/project/${hit._id}`)}
-              className="flex justify-between flex-wrap p-3 border border-[#FFFFFF] bg-[#F9FBFD] rounded-[16px] mt-3 cursor-pointer">
-              <div className="flex w-full md:w-[25%] border-r border-[#E5EAEF]">
-                <div className="flex flex-wrap gap-4 items-center">
-                  {hit.logo && <img className="w-[85px] h-[85px] rounded-[8px] object-contain	" src={hit.logo} alt="ProjectImage.png" />}
-                  <div className="flex flex-col flex-wrap flex-1">
-                    <div className="text-[18px] text-[#212325] font-semibold flex flex-wrap">{hit.name}</div>
-                  </div>
-                </div>
-              </div>
-              <div className="w-full md:w-[50%] border-r border-[#E5EAEF] pl-[10px]">
-                <span className="text-[14px] font-medium text-[#212325]">{hit.description ? hit.description : ""}</span>
-              </div>
-              <div className="w-full md:w-[25%]  px-[10px]">
-                <span className="text-[16px] font-medium text-[#212325]">Budget consumed {hit.paymentCycle === "MONTHLY" && "this month"}:</span>
-                <Budget project={hit} />
-              </div>
-            </div>
-          );
+          return <Project key={hit._id} project={hit} handlePinToggle={handlePinToggle} />;
         })}
       </div>
     </div>

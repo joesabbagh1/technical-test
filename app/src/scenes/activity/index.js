@@ -48,15 +48,17 @@ const Activity = () => {
 
 const Activities = ({ date, user, project }) => {
   const [activities, setActivities] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [open, setOpen] = useState(null);
 
   useEffect(() => {
     (async () => {
       const { data } = await api.get(`/activity?date=${date.getTime()}&user=${user.name}&project=${project}`);
-      const projects = await api.get(`/project/list`);
+      const { data: projects } = await api.get(`/project/list`);
+      setProjects(projects);
       setActivities(
         data.map((activity) => {
-          return { ...activity, projectName: (activity.projectName = projects.data.find((project) => project._id === activity.projectId)?.name) };
+          return { ...activity, projectName: (activity.projectName = projects.find((project) => project._id === activity.projectId)?.name) };
         }),
       );
       setOpen(null);
@@ -64,6 +66,7 @@ const Activities = ({ date, user, project }) => {
   }, [date]);
 
   const days = getDaysInMonth(date.getMonth(), date.getFullYear());
+
   const onAddActivities = (project) => {
     const found = activities.find((a) => a.projectId === project._id);
     if (found) return toast.error(`Project ${project.name} already added !`);
@@ -132,7 +135,7 @@ const Activities = ({ date, user, project }) => {
     <div className="flex flex-wrap py-3 gap-4 text-black">
       <div className="w-screen md:w-full p-2 md:!px-8">
         {/* Table Container */}
-        {true && (
+        {activities && (
           <div className="mt-2 rounded-xl bg-[#fff] overflow-auto">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -224,7 +227,7 @@ const Activities = ({ date, user, project }) => {
                   })}
                   <tr>
                     <th className="w-[50px] text-[12px] text-[#212325] px-[10px] py-2">
-                      <SelectProject disabled={activities.map((e) => e.project)} value="" onChange={(e) => onAddActivities(e)} />
+                      <SelectProject disabled={projects.length === 0} value="" projects={projects} onChange={(e) => onAddActivities(e)} />
                     </th>
                   </tr>
                 </tbody>
